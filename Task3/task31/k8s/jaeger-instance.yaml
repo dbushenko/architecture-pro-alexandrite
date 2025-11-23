@@ -1,0 +1,2 @@
+# This file is kept for reference but Jaeger is now deployed in services.yaml
+# Jaeger deployment is included in services.yaml for simplified deployment

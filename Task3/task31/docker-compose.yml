@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - app-network
+
+  service-b:
+    build:
+      context: .
+      dockerfile: Dockerfile.service-b
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+    ports:
+      - "3001:3000"
+    networks:
+      - app-network
+    depends_on:
+      - jaeger
+
+  service-a:
+    build:
+      context: .
+      dockerfile: Dockerfile.service-a
+    environment:
+      - SERVICE_B_URL=http://service-b:3000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    depends_on:
+      - jaeger
+      - service-b
+
+networks:
+  app-network:
+    driver: bridge
